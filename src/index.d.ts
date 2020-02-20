@@ -39,13 +39,13 @@ export declare type CommitAccessorWithPayload<TPayload> = (payload: TPayload) =>
 /**
  * Function which commits a concrete Vuex mutation without payload.
  */
-export declare type CommitAccessorNoPayload<TModuleState, TRootState> = (store: Store<TRootState> | ActionContext<TModuleState, TRootState>) => void;
+export declare type CommitAccessorNoPayload = () => void;
 export interface StoreAccessors<TModuleState, TRootState> {
     /**
      * Returns a function committing mutations directed to the specified mutation handler.
      * This overload is for handlers which do not expect payload.
      */
-    commit(store: Store<TRootState> | ActionContext<TModuleState, TRootState>, handler: MutationHandlerNoPayload<TModuleState>): CommitAccessorNoPayload<TModuleState, TRootState>;
+    commit(store: Store<TRootState> | ActionContext<TModuleState, TRootState>, handler: MutationHandlerNoPayload<TModuleState>): CommitAccessorNoPayload;
     /**
      * Returns a function committing mutations directed to the specified mutation handler.
      * This overload is for handlers which expect payload.
