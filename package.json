@@ -3,11 +3,11 @@
   "version": "3.0.2",
   "description": "A simple way to get static typing, static code analysis and intellisense with Vuex library.",
   "files": [
-    "dist/index.js",
-    "dist/index.d.ts"
+    "src/index.js",
+    "src/index.d.ts"
   ],
   "main": "src/index.js",
-  "typings": "dist/index.d.ts",
+  "typings": "src/index.d.ts",
   "author": "istrib",
   "license": "MIT",
   "devDependencies": {
