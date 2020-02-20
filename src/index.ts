@@ -1,3 +1,5 @@
+// TODO: update tests
+
 import { ActionContext, Store } from "vuex";
 
 const useRootNamespace = { root: true };
@@ -37,27 +39,25 @@ export type MutationHandlerNoPayload<TModuleState> =
 /**
  * Function which gets value of a concrete Vuex getter.
  */
-export type GetAccessor<TModuleState, TRootState, TResult> =
-    (store: Store<TRootState> | ActionContext<TModuleState, TRootState>) => TResult;
+export type GetAccessor<TResult> =
+    () => TResult;
 
 /**
  * Function which dispatches a concrete Vuex action with payload.
  */
-export type DispatchAccessorWithPayload<TModuleState, TRootState, TPayload, TResult> =
-    (store: Store<TRootState> | ActionContext<TModuleState, TRootState>,
-    payload: TPayload) => Promise<TResult>;
+export type DispatchAccessorWithPayload<TPayload, TResult> =
+    (payload: TPayload) => Promise<TResult>;
 /**
  * Function which dispatches a concrete Vuex action without payload.
  */
-export type DispatchAccessorNoPayload<TModuleState, TRootState, TResult> =
-    (store: Store<TRootState> | ActionContext<TModuleState, TRootState>) => Promise<TResult>;
+export type DispatchAccessorNoPayload<TResult> =
+    () => Promise<TResult>;
 
 /**
  * Function which commits a concrete Vuex mutation with payload.
  */
-export type CommitAccessorWithPayload<TModuleState, TRootState, TPayload> =
-    (store: Store<TRootState> | ActionContext<TModuleState, TRootState>,
-    payload: TPayload) => void;
+export type CommitAccessorWithPayload<TPayload> =
+    (payload: TPayload) => void;
 /**
  * Function which commits a concrete Vuex mutation without payload.
  */
@@ -70,6 +70,7 @@ export interface StoreAccessors<TModuleState, TRootState> {
      * This overload is for handlers which do not expect payload.
      */
     commit(
+        store: Store<TRootState> | ActionContext<TModuleState, TRootState>,
         handler: MutationHandlerNoPayload<TModuleState>):
             CommitAccessorNoPayload<TModuleState, TRootState>;
     /**
@@ -77,40 +78,44 @@ export interface StoreAccessors<TModuleState, TRootState> {
      * This overload is for handlers which expect payload.
      */
     commit<TPayload>(
+        store: Store<TRootState> | ActionContext<TModuleState, TRootState>,
         handler: MutationHandlerWithPayload<TModuleState, TPayload>):
-            CommitAccessorWithPayload<TModuleState, TRootState, TPayload>;
+            CommitAccessorWithPayload<TPayload>;
 
     /**
      * Returns a function dispatching actions directed to the specified action handler.
      * This overload is for handlers which do not expect payload.
      */
     dispatch<TResult>(
+        store: Store<TRootState> | ActionContext<TModuleState, TRootState>,
         handler: ActionHandlerNoPayload<TModuleState, TRootState, TResult>):
-            DispatchAccessorNoPayload<TModuleState, TRootState, TResult>;
+            DispatchAccessorNoPayload<TResult>;
     /**
      * Returns a function dispatching actions directed to the specified action handler.
      * This overload is for handlers which expect payload.
      */
     dispatch<TPayload, TResult>(
+        store: Store<TRootState> | ActionContext<TModuleState, TRootState>,
         handler: ActionHandlerWithPayload<TModuleState, TRootState, TPayload, TResult>):
-            DispatchAccessorWithPayload<TModuleState, TRootState, TPayload, TResult>;
+            DispatchAccessorWithPayload<TPayload, TResult>;
 
     /**
      * Returns a function returning value of the specified getter.
      */
     read<TResult>(
+        store: Store<TRootState> | ActionContext<TModuleState, TRootState>,
         handler: GetterHandler<TModuleState, TRootState, TResult>):
-            GetAccessor<TModuleState, TRootState, TResult>;
+            GetAccessor<TResult>;
 }
 
 export function getStoreAccessors<TModuleState, TRootState>(
     namespace: string): StoreAccessors<TModuleState, TRootState> {
         return {
-            commit: (handler: Function) => createAccessor("commit", handler, namespace),
-            dispatch: (handler: Function) => createAccessor("dispatch", handler, namespace),
-            read: (handler: Function) => {
+            commit: (store: any, handler: Function) => createAccessor("commit", store, handler, namespace),
+            dispatch: (store: any, handler: Function) => createAccessor("dispatch", store, handler, namespace),
+            read: (store: any, handler: Function) => {
                 const key = qualifyKey(handler, namespace);
-                return (store: any) => {
+                return () => {
                     return store.rootGetters
                         ? store.rootGetters[key] // ActionContext
                         : store.getters[key]; // Store
@@ -121,10 +126,11 @@ export function getStoreAccessors<TModuleState, TRootState>(
 
 function createAccessor(
     operation: string,
+    store: any,
     handler: Function,
     namespace: string): any {
         const key = qualifyKey(handler, namespace);
-        return (store: any, payload: any) => {
+        return (payload: any) => {
             return store[operation](key, payload, useRootNamespace);
         };
 }
